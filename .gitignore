@@ -1,0 +1,13 @@
+tools/
+build/
+dist/
+node_modules/
+installation/
+backups/
+*.zip
+*.key
+*.pfx
+*.p12
+*.pem
+diagnostic.txt
+dualboot.local.ini

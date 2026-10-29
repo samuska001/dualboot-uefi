@@ -1,0 +1,27 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download checked toolchain
+        shell: pwsh
+        run: ./scripts/setup-tools.ps1
+      - name: Native tests
+        shell: pwsh
+        run: ./scripts/test.ps1
+      - name: Build EFI
+        shell: pwsh
+        run: ./scripts/build.ps1
+      - name: Package
+        shell: pwsh
+        run: ./scripts/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DualBoot-0.1.0
+          path: |
+            dist/DualBoot-0.1.0.zip
+            dist/SHA256SUMS.txt

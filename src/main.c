@@ -1,6 +1,6 @@
 #include "menu.h"
 #ifdef DB_MOK_REPORT
-#include "secureboot_status.h"
+#include "secureboot_report.h"
 #endif
 #ifdef DB_SECURE_BOOT
 static const volatile char sbat_data[] __attribute__((section(".sbat"),used))=

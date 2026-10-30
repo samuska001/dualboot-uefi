@@ -19,3 +19,7 @@ O símbolo Windows 11 vem do [material de imprensa Microsoft](https://news.micro
 O símbolo Steam vem do [site oficial SteamOS](https://store.steampowered.com/steamos/), [SVG original](https://store.akamai.steamstatic.com/public/shared/images/header/logo_steam.svg). Steam, SteamOS e seu símbolo pertencem à Valve Corporation.
 
 Os símbolos foram extraídos/rasterizados para identificar os sistemas locais. Não se declara afiliação, patrocínio ou aprovação dessas empresas. Os direitos de uso das marcas continuam sendo dos respectivos titulares.
+
+## shim e MokManager (modo assinado 0.3.0)
+
+Binários públicos Fedora 44 shim-x64 16.1-5, procedência e SHA256 em assets/secureboot-provenance.json. Copyright/licença BSD de upstream preservados em licenses/shim-COPYRIGHT.txt, incluído no pacote. Fonte upstream: https://github.com/rhboot/shim/tree/16.1. Aceitação em firmware/revogações precisa do teste USB na máquina de destino. O pacote não contém kernels ou módulos GRUB privados; esses arquivos são coletados no computador do usuário.

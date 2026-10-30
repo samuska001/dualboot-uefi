@@ -1,12 +1,12 @@
-# DualBoot UEFI
+﻿# DualBoot UEFI
 
 Escolha **Windows ou SteamOS antes de o sistema iniciar**, usando teclado ou um controle compatível. Gerenciador UEFI x86-64 escrito em C, com dois cartões visuais, tema por arquivos e diagnóstico USB integrado.
 
-**Instalador 0.2.0 experimental, com gerenciador EFI 0.1.0.** O gerenciador foi testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
+**Instalador 0.3.0 experimental, com assistente de Secure Boot.** Veja [SECUREBOOT.md](docs/SECUREBOOT.md) para assinatura local, teste USB, cadastro MOK e ativação manual na BIOS. O fluxo completo do novo EXE ainda precisa de teste físico em outro PC. O gerenciador foi testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
 
 ## Instalação fácil no Windows
 
-1. Baixe [**DualBoot-Setup-0.2.0.exe**](https://github.com/samuska001/dualboot-uefi/releases/download/v0.2.0/DualBoot-Setup-0.2.0.exe).
+1. Baixe [**DualBoot-Setup-0.3.0.exe**](https://github.com/samuska001/dualboot-uefi/releases/download/v0.3.0/DualBoot-Setup-0.3.0.exe).
 2. Abra, aceite a solicitação de administrador e confira os sistemas encontrados.
 3. Escolha sistema padrão e tempo e clique **Instalar no SSD**.
 
@@ -14,7 +14,7 @@ O assistente detecta GUIDs e caminhos, gera a configuração, cria o registro de
 
 ![Instalador em demonstração, com sistemas fictícios](docs/installer.png)
 
-Windows 10/11 x64 e .NET Framework 4.8. A instalação pública exige Secure Boot desligado; o SSD automático exige criptografia do Windows confirmada desligada e uma ESP compatível. Instalações manuais/personalizadas existentes são preservadas. O instalador não muda essas proteções nem inclui certificados privados. Seu fluxo real de escrita no SSD ainda precisa de validação física; testes simulados e limitações estão em [VALIDACAO.md](docs/VALIDACAO.md).
+Windows 10/11 x64 e .NET Framework 4.8. O fluxo tradicional sem assinatura exige Secure Boot desligado; o novo assistente tem requisitos separados em SECUREBOOT.md; o SSD automático exige criptografia do Windows confirmada desligada e uma ESP compatível. Instalações manuais/personalizadas existentes são preservadas. O instalador não muda essas proteções nem inclui certificados privados. Seu fluxo real de escrita no SSD ainda precisa de validação física; testes simulados e limitações estão em [VALIDACAO.md](docs/VALIDACAO.md).
 
 ![Menu com Windows selecionado](docs/menu.png)
 
@@ -26,7 +26,7 @@ Windows 10/11 x64 e .NET Framework 4.8. A instalação pública exige Secure Boo
 4. Inicie pela entrada UEFI do pendrive. A primeira tela é o diagnóstico.
 5. Salve o relatório com F2, configure os GUIDs e caminhos do **seu PC** em `EFI/BOOT/dualboot.ini` e teste cada sistema pelo USB.
 
-O pacote não instala Windows/SteamOS, não cria partições e não configura seus destinos sozinho. Os dois destinos vêm desativados e sem contagem automática. A edição pública não é assinada para Secure Boot: não funciona com ele ativado. Veja os requisitos no manual antes de mudar configurações do firmware.
+O pacote não instala Windows/SteamOS, não cria partições e não configura seus destinos sozinho. Os dois destinos vêm desativados e sem contagem automática. Esse ZIP EFI 0.1.0 antigo não é assinado para Secure Boot; o novo assistente 0.3.0 prepara as cópias assinadas por computador. Veja os requisitos no manual antes de mudar configurações do firmware.
 
 ## Controles
 

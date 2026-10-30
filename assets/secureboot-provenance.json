@@ -1,0 +1,11 @@
+{
+  "distribution": "Fedora 44",
+  "package": "shim-x64-16.1-5.x86_64.rpm",
+  "url": "https://mirrors.kernel.org/fedora/releases/44/Everything/x86_64/os/Packages/s/shim-x64-16.1-5.x86_64.rpm",
+  "packageSHA256": "a1bbabaca8e4398b2483c678240f4be4803e91390b512a7b618da3bc88e49917",
+  "shimSHA256": "571ea56b855dcf73bec6acb63c5ded44c2a191138bca0d8cfa5aa93f60f46fff",
+  "mokManagerSHA256": "f8af592759c8ab33b69c4b0e772da5a8e2aa6d09c7dbd5e24c62c89fa5fdbd05",
+  "upstream": "https://github.com/rhboot/shim",
+  "copyright": "licenses/shim-COPYRIGHT.txt",
+  "firmwareCompatibility": "Experimental; firmware trust and revocation checks must pass the USB test on the destination computer. No OEM key database updates are performed."
+}

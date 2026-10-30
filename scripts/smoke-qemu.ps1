@@ -141,9 +141,16 @@ try {
         $null = Send-Qmp @{execute='quit'}
         $qemu.WaitForExit()
         $sevenZip = (Get-Command 7z.exe -ErrorAction SilentlyContinue).Source; if (-not $sevenZip -and (Test-Path -LiteralPath "$env:ProgramFiles\7-Zip\7z.exe")) { $sevenZip = "$env:ProgramFiles\7-Zip\7z.exe" }
-        if (-not $sevenZip) { throw '7z necessário para ler o FAT virtual de teste' }
         $readback = Join-Path $runRoot 'readback'
-        & $sevenZip x $reportDisk 'EFI\BOOT\diagnostic.txt' "-o$readback" -y | Out-Null
+        if($sevenZip){& $sevenZip x $reportDisk 'EFI\BOOT\diagnostic.txt' "-o$readback" -y | Out-Null}
+        else {
+            $python=(Get-Command python.exe -ErrorAction SilentlyContinue).Source
+            if(-not $python){$python=Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'}
+            if(-not (Test-Path -LiteralPath $python)){throw '7-Zip ou Python com pyfatfs necessário para a leitura independente do teste'}
+            $oldPythonPath=$env:PYTHONPATH
+            try{$env:PYTHONPATH=(Join-Path $projectRoot 'tools\fat-test')+[IO.Path]::PathSeparator+$oldPythonPath;& $python (Join-Path $PSScriptRoot 'read-fat-report.py') $reportDisk (Join-Path $readback 'EFI\BOOT\diagnostic.txt')}
+            finally{$env:PYTHONPATH=$oldPythonPath}
+        }
         if ($LASTEXITCODE -ne 0) { throw 'Falha na leitura independente do FAT gravado' }
         $report = [IO.File]::ReadAllText((Join-Path $readback 'EFI\BOOT\diagnostic.txt'))
         if (-not $report.Contains('USB 045E:028E') -or -not $report.TrimEnd().EndsWith('--- END OF CURRENT INVENTORY ---') -or $report.Contains('STALE-TAIL')) { throw 'Relatório incompleto ou com conteúdo antigo após a gravação' }

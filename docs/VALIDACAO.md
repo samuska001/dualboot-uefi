@@ -1,5 +1,20 @@
 # Validação da edição pública
 
+## Instalador 0.3.0 — candidato local de 30/10/2026
+
+- EXE x64 .NET Framework 4.8 compilado com recursos verificados: 28 verificações core, 30 deployment tradicionais, 28 workflow/deployment assinado e 34 coleta/bundle no build empacotado.
+- Chaves descartáveis CNG: criação não exportável, reabertura exata, assinatura de templates, rejeição de adulteração e certificado diferente. As duas identidades LAB e suas chaves foram removidas; somente CER/EFI públicos ficaram em `build/secureboot-lab`.
+- OVMF/shim/MOK: três imagens assinadas aceitas; unsigned, adulterada e assinada por outro certificado recusadas; SecureBoot=1, SetupMode=0, validação shim habilitada. Relatório EFI V2 gerado, relido e extraído da imagem FAT virtual. Evidência local `build/qemu-secureboot-installer/result.json`.
+- Testes C do binding/SHA256/MOK passaram. Coletor Linux: sete testes Python sintéticos; o script Bash não foi executado no SteamOS vivo durante este desenvolvimento.
+- Interface capturada com `--render-secure-demo`, sem administrador, criação de certificado, varredura ou escrita em discos de boot. O EXE final passou `--self-test`.
+- Recuperação: journal vinculado duravelmente à sessão antes de qualquer escrita EFI; falha de metadados/cópia, alteração externa e restauração testadas com arquivos temporários e firmware simulado.
+- Harness WinForms confirmou que uma falha com recuperação pendente habilita Restaurar na mesma janela, sem reabrir, com sessão completa e checkbox sincronizados. Revisão final independente não encontrou achados P0/P1/P2 pendentes após a correção.
+- A verificação completa do núcleo/build EFI e os 12 cenários QEMU tradicionais passaram, incluindo releitura do relatório FAT pelo fallback pyfatfs. O aviso de depreciação pkg_resources é de uma dependência do leitor de teste; não está no runtime do instalador.
+- O novo EXE não foi instalado no SSD físico deste PC. Coleta ao vivo, novo bundle SteamOS, cadastro MOK e instalação/restauração físicos em outro computador continuam pendentes. A instalação particular existente foi preservada.
+- O fluxo tradicional permanece compatível com journals 0.2.0. O cenário antigo Report pode usar 7-Zip ou Python/pyfatfs para releitura independente do FAT; não altera o runtime do instalador.
+
+Manual: `SECUREBOOT.md`. As instruções de reprodução e os artefatos da edição 0.3.0 ainda não constituem uma release publicada.
+
 ## Instalador 0.2.0
 
 - Compilação do EXE Windows x64 com .NET Framework, sem baixar dependências para o usuário.

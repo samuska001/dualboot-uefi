@@ -1,6 +1,8 @@
-# Instalação fácil — DualBoot Setup 0.2.0
+﻿# Instalação fácil — DualBoot Setup 0.3.0 experimental
 
-1. Baixe **DualBoot-Setup-0.2.0.exe** na release oficial do projeto.
+Baixe a edição experimental 0.3.0 na página de releases. O modo tradicional sem assinatura continua disponível; para o novo modo assinado siga SECUREBOOT.md.
+
+1. Abra o EXE obtido da release oficial do projeto.
 2. Abra o arquivo e aceite a solicitação normal de administrador do Windows.
 3. Confira Windows e SteamOS encontrados, escolha o padrão e o tempo.
 4. Clique **Instalar no SSD** e confira o resumo do destino antes de confirmar.
@@ -30,7 +32,7 @@ Não apague o arquivo `setup-owner.id` da pasta instalada: ele identifica a prop
 - Windows/SteamOS já instalados e funcionando por suas entradas originais.
 - Os destinos precisam ter entradas ativas reconhecíveis, em partições EFI GPT internas acessíveis com sistema de arquivos FAT compatível. As escritas do instalador (ESP Windows e pendrive) exigem FAT32; a ESP SteamOS pode ser FAT/FAT16, pois é consultada somente em leitura.
 - O SSD automático usa somente a partição EFI marcada como sistema pelo Windows em execução. Não instala em outra ESP de Windows por tentativa.
-- A edição pública exige **Secure Boot confirmado desligado**. O assistente não muda esse ajuste, certificados ou chaves.
+- O fluxo tradicional sem assinatura exige **Secure Boot confirmado desligado**. O novo botão Preparar Secure Boot tem fluxo separado descrito em SECUREBOOT.md, com cadastro MOK e ativação BIOS manuais e teste USB obrigatório.
 - Para SSD, a criptografia do Windows deve ser confirmada totalmente desligada. Se o estado estiver ativo ou indisponível, o assistente bloqueia essa operação e não desativa proteções.
 - Não substitui uma pasta `EFI/DualBoot` existente sem registro deste assistente. Instalações manuais ou com cadeia Secure Boot personalizada são preservadas. A configuração especial do PC de desenvolvimento não é distribuída.
 - Controle validado no desenvolvimento: Flydigi Direwolf 4 no modo Xbox 360 com receptor USB compatível. O teclado continua disponível.

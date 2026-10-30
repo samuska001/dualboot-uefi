@@ -67,7 +67,9 @@ namespace DualBoot.Installer {
                     int diskNumber=(int)Number(row,"DiskNumber");ManagementBaseObject disk;if(!disks.TryGetValue(diskNumber,out disk))continue;
                     int bus=(int)Number(disk,"BusType");Guid guid;Guid.TryParse(Text(row,"Guid"),out guid);
                     Guid type;Guid.TryParse(Text(row,"GptType"),out type);bool esp=type==new Guid("c12a7328-f81f-11d2-ba4b-00a0c93ec93b");
-                    if(!esp && bus!=7)continue;
+                    // Signed SteamOS preparation also identifies rootfs/efi slot GPT partitions.
+                    // Legacy installation policy still writes only to the selected system ESP.
+                    if(!esp && bus!=7 && guid==Guid.Empty)continue;
                     var part=new PartitionInfo{Guid=guid,IsEsp=esp,DiskNumber=diskNumber,PartitionNumber=(int)Number(row,"PartitionNumber"),IsUsb=bus==7,
                         IsInternal=Array.IndexOf(new[]{1,3,8,10,11,17},bus)>=0,IsSystem=Flag(row,"IsSystem")||Flag(disk,"IsSystem"),IsBoot=Flag(row,"IsBoot")||Flag(disk,"IsBoot")};
                     // IsSystem on disk is used only to exclude USB; for the Windows ESP use the partition's own flag.

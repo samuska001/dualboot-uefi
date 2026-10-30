@@ -8,6 +8,8 @@ New-Item -ItemType Directory -Path (Join-Path $root 'build\installer'),(Join-Pat
 Push-Location $root
 try {
     if(-not $SkipEfiBuild){& (Join-Path $PSScriptRoot 'build.ps1')}
+    & (Join-Path $PSScriptRoot 'build-secureboot-payload.ps1') -Test
+    & (Join-Path $PSScriptRoot 'setup-secureboot-tools.ps1')
     foreach($efi in @('DualBoot.efi','Diagnostic.efi')){
         $bytes=[IO.File]::ReadAllBytes((Join-Path $root ('build\'+$efi)))
         $offset=[BitConverter]::ToInt32($bytes,60)
@@ -31,21 +33,23 @@ try {
         try{$inputStream.CopyTo($output)}finally{$inputStream.Dispose();$output.Dispose()}
     }}finally{$zip.Dispose();$stream.Dispose()}
     $hashes | Set-Content -LiteralPath 'build\installer\payload.hashes' -Encoding ascii
-    $sources=@('installer\Core.cs','installer\BootTransaction.cs','installer\FirmwareNative.cs','installer\Deployment.cs','installer\Native.cs','installer\Tests.cs','installer\DeploymentTests.cs')
-    $refs=@('/r:System.Web.Extensions.dll','/r:System.IO.Compression.dll','/r:System.Management.dll')
-    $resources=@('/resource:build\installer\payload.zip,payload.zip','/resource:build\installer\payload.hashes,payload.hashes','/resource:docs\INSTALADOR.md,installer.manual')
-    & $compiler /nologo /warnaserror /optimize+ /platform:x64 /target:exe /main:DualBoot.Installer.InstallerTests /out:build\installer\tests.exe @refs @resources @sources
+    $sources=@('installer\Core.cs','installer\BootTransaction.cs','installer\FirmwareNative.cs','installer\Deployment.cs','installer\Native.cs','installer\Tests.cs','installer\DeploymentTests.cs','installer\SecureSigning.cs','installer\SteamCollection.cs','installer\SteamBundle.cs','installer\SteamCollectionTests.cs','installer\SecureBootWorkflow.cs','installer\SecureBootDeployment.cs','installer\SecureBootNative.cs','installer\SecureBootTests.cs','installer\SecureInstallerTests.cs')
+    $refs=@('/r:System.Web.Extensions.dll','/r:System.IO.Compression.dll','/r:System.Management.dll','/r:System.Security.dll')
+    $shim='tools\shim-fedora-16.1-5\usr\lib\efi\shim\16.1-5\EFI\fedora'
+    $resources=@('/resource:build\installer\payload.zip,payload.zip','/resource:build\installer\payload.hashes,payload.hashes','/resource:docs\INSTALADOR.md,installer.manual',('/resource:'+$shim+'\shimx64.efi,secure.shim'),('/resource:'+$shim+'\mmx64.efi,secure.mokmanager'),'/resource:build\secureboot-payload\DualBoot.template.efi,secure.menu','/resource:build\secureboot-payload\Diagnostic.template.efi,secure.diagnostic','/resource:scripts\collect-secureboot-steamos.sh,secure.collector','/resource:docs\SECUREBOOT.md,secure.manual','/resource:licenses\shim-COPYRIGHT.txt,secure.license')
+    & $compiler /nologo /codepage:65001 /warnaserror /optimize+ /platform:x64 /target:exe /main:DualBoot.Installer.SecureInstallerTests /out:build\installer\tests.exe @refs @resources @sources
     if($LASTEXITCODE -ne 0){throw 'Installer test compilation failed.'}
     & '.\build\installer\tests.exe'
     if($LASTEXITCODE -ne 0){throw 'Installer tests failed.'}
-    $outputPath='dist\DualBoot-Setup-0.2.0.exe'
-    & $compiler /nologo /warnaserror /optimize+ /platform:x64 /target:winexe /main:DualBoot.Installer.Program /win32manifest:installer\app.manifest "/out:$outputPath" /r:System.Windows.Forms.dll /r:System.Drawing.dll @refs @resources @sources installer\MainForm.cs installer\Program.cs
+    & (Join-Path $PSScriptRoot 'test-secure-ui.ps1')
+    $outputPath='dist\DualBoot-Setup-0.3.0.exe'
+    & $compiler /nologo /codepage:65001 /warnaserror /optimize+ /platform:x64 /target:winexe /main:DualBoot.Installer.Program /win32manifest:installer\app.manifest "/out:$outputPath" /r:System.Windows.Forms.dll /r:System.Drawing.dll @refs @resources @sources installer\MainForm.cs installer\SecureBootForm.cs installer\Program.cs
     if($LASTEXITCODE -ne 0){throw 'Installer GUI compilation failed.'}
-    $bundle=Join-Path $root 'build\installer\DualBoot-Setup-0.2.0.zip'
-    Compress-Archive -LiteralPath $outputPath,'docs\INSTALADOR.md','LICENSE','THIRD_PARTY.md' -DestinationPath $bundle -Force
-    Copy-Item -LiteralPath $bundle -Destination 'dist\DualBoot-Setup-0.2.0.zip' -Force
-    Get-Item -LiteralPath 'dist\DualBoot-Setup-0.2.0.exe','dist\DualBoot-Setup-0.2.0.zip' | ForEach-Object {
+    $bundle=Join-Path $root 'build\installer\DualBoot-Setup-0.3.0.zip'
+    Compress-Archive -LiteralPath $outputPath,'docs\INSTALADOR.md','docs\SECUREBOOT.md','licenses','assets','LICENSE','THIRD_PARTY.md' -DestinationPath $bundle -Force
+    Copy-Item -LiteralPath $bundle -Destination 'dist\DualBoot-Setup-0.3.0.zip' -Force
+    Get-Item -LiteralPath 'dist\DualBoot-Setup-0.3.0.exe','dist\DualBoot-Setup-0.3.0.zip' | ForEach-Object {
         (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.Name
-    } | Set-Content -LiteralPath 'dist\SHA256SUMS-0.2.0.txt' -Encoding ascii
+    } | Set-Content -LiteralPath 'dist\SHA256SUMS-0.3.0.txt' -Encoding ascii
     Get-Item -LiteralPath $outputPath | Select-Object FullName,Length
 }finally{Pop-Location}

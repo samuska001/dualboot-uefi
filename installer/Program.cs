@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -7,13 +7,16 @@ using System.Runtime.Versioning;
 using System.Web.Script.Serialization;
 [assembly:TargetFramework(".NETFramework,Version=v4.8",FrameworkDisplayName=".NET Framework 4.8")]
 [assembly:System.Reflection.AssemblyTitle("DualBoot Setup")]
-[assembly:System.Reflection.AssemblyVersion("0.2.0.0")]
+[assembly:System.Reflection.AssemblyVersion("0.3.0.0")]
 [assembly:System.Reflection.AssemblyProduct("DualBoot UEFI")]
 namespace DualBoot.Installer {
     public static class Program {
         [STAThread]public static int Main(string[] args){
             AppContext.SetSwitch("Switch.System.IO.UseLegacyPathHandling",false);AppContext.SetSwitch("Switch.System.IO.BlockLongPaths",false);
-            if(args.Length==1 && args[0]=="--self-test")return InstallerTests.Run();
+            if(args.Length==1 && args[0]=="--self-test")return SecureInstallerTests.Run();
+            if(args.Length==2 && args[0]=="--render-secure-demo"){
+                try{Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);using(var form=new SecureBootForm(true,null,null))form.RenderDemo(args[1]);return 0;}catch{return 1;}
+            }
             if(args.Length==2 && args[0]=="--render-demo"){
                 try{Payload.ReadEmbedded();Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);using(var form=new MainForm(true))form.RenderDemo(args[1]);return 0;}catch{return 1;}
             }

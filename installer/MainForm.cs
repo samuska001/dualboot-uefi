@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Drawing;
 using System.Reflection;
@@ -12,18 +12,18 @@ namespace DualBoot.Installer {
         readonly ComboBox windows=new ComboBox(),steam=new ComboBox(),systemDefault=new ComboBox(),usb=new ComboBox(),backups=new ComboBox();
         readonly NumericUpDown timeout=new NumericUpDown();readonly CheckBox steamFirst=new CheckBox();
         readonly Label summary=new Label(),compatibility=new Label();readonly TextBox details=new TextBox();
-        readonly Button scan=new Button(),install=new Button(),prepare=new Button(),restore=new Button(),configure=new Button(),manual=new Button(),folder=new Button();
+        readonly Button scan=new Button(),install=new Button(),prepare=new Button(),restore=new Button(),configure=new Button(),manual=new Button(),folder=new Button(),secure=new Button();
         readonly ProgressBar progress=new ProgressBar();bool busy;
         static readonly Color background=Color.FromArgb(17,21,29),card=Color.FromArgb(27,33,44),foreground=Color.FromArgb(234,239,247),muted=Color.FromArgb(173,186,206),accent=Color.FromArgb(65,126,238);
         public MainForm(bool demonstration){
-            demo=demonstration;Text="DualBoot Setup 0.2.0";ClientSize=new Size(960,760);MinimumSize=new Size(940,740);StartPosition=FormStartPosition.CenterScreen;
+            demo=demonstration;Text="DualBoot Setup 0.3.0";ClientSize=new Size(960,760);MinimumSize=new Size(940,740);StartPosition=FormStartPosition.CenterScreen;
             BackColor=background;ForeColor=foreground;Font=new Font("Segoe UI",10);AutoScaleMode=AutoScaleMode.Dpi;
             var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(26),ColumnCount=1,RowCount=7};
             foreach(var style in new[]{new RowStyle(SizeType.Absolute,82),new RowStyle(SizeType.Absolute,80),new RowStyle(SizeType.Absolute,245),new RowStyle(SizeType.Absolute,68),new RowStyle(SizeType.Absolute,88),new RowStyle(SizeType.Percent,100),new RowStyle(SizeType.Absolute,12)})layout.RowStyles.Add(style);
             Controls.Add(layout);
             var header=new Panel{Dock=DockStyle.Fill};header.Controls.Add(new Label{Text="DualBoot",Font=new Font("Segoe UI",27,FontStyle.Bold),AutoSize=true,Location=new Point(0,0)});
             header.Controls.Add(new Label{Text=demo?"DEMONSTRAÇÃO · nenhuma alteração em discos ou firmware":"Instale e configure seu menu de boot",ForeColor=muted,AutoSize=true,Location=new Point(3,51)});
-            header.Controls.Add(new Label{Text="0.2.0 · EXPERIMENTAL",Width=215,Dock=DockStyle.Right,TextAlign=ContentAlignment.MiddleRight,ForeColor=muted});layout.Controls.Add(header);
+            header.Controls.Add(new Label{Text="0.3.0 · EXPERIMENTAL",Width=215,Dock=DockStyle.Right,TextAlign=ContentAlignment.MiddleRight,ForeColor=muted});layout.Controls.Add(header);
             summary.Dock=DockStyle.Fill;summary.BackColor=card;summary.Padding=new Padding(16,10,10,10);summary.Text="Verificando seu computador…";layout.Controls.Add(summary);
             var columns=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,Padding=new Padding(0,16,0,0)};columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,53));columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,47));layout.Controls.Add(columns);
             var systems=Section("1   Sistemas encontrados");var settings=Section("2   Sua configuração");columns.Controls.Add(systems);columns.Controls.Add(settings);
@@ -36,7 +36,7 @@ namespace DualBoot.Installer {
             compatibility.Dock=DockStyle.Fill;compatibility.Padding=new Padding(2,8,0,0);compatibility.ForeColor=muted;layout.Controls.Add(compatibility);
             var actions=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.LeftToRight,WrapContents=true};
             SetupButton(install,"Instalar no SSD",160,true);SetupButton(scan,"Verificar novamente",173,false);SetupButton(manual,"Como usar",120,false);
-            actions.Controls.Add(install);actions.Controls.Add(scan);actions.Controls.Add(manual);
+            actions.Controls.Add(install);actions.Controls.Add(scan);actions.Controls.Add(manual);SetupButton(secure,"Preparar Secure Boot",205,true);actions.Controls.Add(secure);
             var usbRow=new FlowLayoutPanel{Width=880,Height=38,WrapContents=false,Margin=new Padding(0,5,0,0)};
             usbRow.Controls.Add(new Label{Text="Pendrive",AutoSize=true,Margin=new Padding(0,8,12,0)});StyleCombo(usb);usb.Width=435;usbRow.Controls.Add(usb);SetupButton(prepare,"Preparar pendrive",173,false);usbRow.Controls.Add(prepare);actions.Controls.Add(usbRow);layout.Controls.Add(actions);
             var bottom=new TableLayoutPanel{Dock=DockStyle.Fill,RowCount=3,ColumnCount=1};bottom.RowStyles.Add(new RowStyle(SizeType.Absolute,32));bottom.RowStyles.Add(new RowStyle(SizeType.Absolute,40));bottom.RowStyles.Add(new RowStyle(SizeType.Percent,100));
@@ -46,6 +46,7 @@ namespace DualBoot.Installer {
             details.Multiline=true;details.ReadOnly=true;details.ScrollBars=ScrollBars.Vertical;details.Dock=DockStyle.Fill;details.BackColor=background;details.ForeColor=muted;details.BorderStyle=BorderStyle.None;details.Font=new Font("Segoe UI",9);bottom.Controls.Add(details);layout.Controls.Add(bottom);
             progress.Dock=DockStyle.Fill;progress.Style=ProgressBarStyle.Marquee;progress.MarqueeAnimationSpeed=25;progress.Visible=false;layout.Controls.Add(progress);
             scan.Click+=async delegate{await Scan();};install.Click+=async delegate{await Install(false);};prepare.Click+=async delegate{await Install(true);};restore.Click+=async delegate{await Restore();};configure.Click+=async delegate{await Configure();};manual.Click+=delegate{ShowManual();};
+            secure.Click+=delegate{if(busy)return;using(var form=new SecureBootForm(demo,state,Request()))form.ShowDialog(this);};
             folder.Click+=delegate{try{if(!Directory.Exists(NativeServices.BackupRoot))throw new IOException("Ainda não há backups deste assistente.");System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(NativeServices.BackupRoot){UseShellExecute=true});}catch(Exception ex){ShowError(ex);}};
             windows.SelectedIndexChanged+=delegate{RefreshCompatibility();};steam.SelectedIndexChanged+=delegate{RefreshCompatibility();};usb.SelectedIndexChanged+=delegate{RefreshCompatibility();};systemDefault.SelectedIndexChanged+=delegate{RefreshCompatibility();};timeout.ValueChanged+=delegate{RefreshCompatibility();};
             backups.SelectedIndexChanged+=delegate{var j=backups.SelectedItem as Journal;if(j!=null){systemDefault.SelectedIndex=j.SteamDefault?1:0;timeout.Value=Math.Max(0,Math.Min(300,j.Timeout));steamFirst.Checked=j.SteamFirst;}RefreshCompatibility();};
@@ -56,7 +57,7 @@ namespace DualBoot.Installer {
         static void AddChoice(Panel panel,string text,ComboBox combo,int y){panel.Controls.Add(new Label{Text=text,ForeColor=muted,AutoSize=true,Location=new Point(16,y)});StyleCombo(combo);combo.Location=new Point(16,y+27);combo.Width=panel.Width-32;combo.Anchor=AnchorStyles.Top|AnchorStyles.Left|AnchorStyles.Right;panel.Controls.Add(combo);}
         static void SetupButton(Button b,string text,int width,bool primary){b.Text=text;b.Width=width;b.Height=34;b.FlatStyle=FlatStyle.Flat;b.FlatAppearance.BorderColor=Color.FromArgb(63,77,98);b.BackColor=primary?accent:card;b.ForeColor=foreground;b.Margin=new Padding(0,0,10,4);b.Cursor=Cursors.Hand;}
         InstallRequest Request(){return new InstallRequest{Windows=windows.SelectedItem as FirmwareEntry,Steam=steam.SelectedItem as FirmwareEntry,UsbPartition=usb.SelectedItem as PartitionInfo,SteamDefault=systemDefault.SelectedIndex==1,Timeout=(int)timeout.Value,SteamFirst=steamFirst.Checked};}
-        void SetBusy(bool value){busy=value;progress.Visible=value;scan.Enabled=!value;windows.Enabled=!value;steam.Enabled=!value;systemDefault.Enabled=!value;timeout.Enabled=!value;steamFirst.Enabled=!value;usb.Enabled=!value;backups.Enabled=!value;manual.Enabled=!value;folder.Enabled=!value&&!demo;RefreshCompatibility();}
+        void SetBusy(bool value){busy=value;progress.Visible=value;scan.Enabled=!value;windows.Enabled=!value;steam.Enabled=!value;systemDefault.Enabled=!value;timeout.Enabled=!value;steamFirst.Enabled=!value;usb.Enabled=!value;backups.Enabled=!value;manual.Enabled=!value;folder.Enabled=!value&&!demo;secure.Enabled=!value&&state!=null;RefreshCompatibility();}
         void RefreshCompatibility(){
             install.Enabled=false;prepare.Enabled=false;restore.Enabled=false;configure.Enabled=false;if(busy||state==null)return;
             var request=Request();string issue=Policy.Compatibility(state,request,false);string usbIssue=Policy.Compatibility(state,request,true);

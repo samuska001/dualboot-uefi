@@ -10,7 +10,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.repository == 'samuska001/dualboot-uefi' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: publish v0.3.0'))
+    if: >-
+      github.repository == 'samuska001/dualboot-uefi' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: publish v0.3.0'))
     runs-on: windows-latest
     permissions:
       contents: write

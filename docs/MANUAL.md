@@ -1,5 +1,7 @@
 # Manual — DualBoot UEFI 0.1.0
 
+**Prefere instalar sem comandos?** Use o [instalador gráfico 0.2.0](INSTALADOR.md). Este documento descreve a alternativa técnica/manual do gerenciador EFI.
+
 ## O que você vai instalar
 
 Um pequeno aplicativo que roda no firmware UEFI, antes de Windows ou SteamOS. Ele mostra dois cartões e inicia o carregador original do sistema selecionado. Os sistemas precisam estar instalados e iniciar normalmente pelo menu de boot da placa-mãe.

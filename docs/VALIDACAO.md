@@ -1,5 +1,16 @@
 # Validação da edição pública
 
+## Instalador 0.2.0
+
+- Compilação do EXE Windows x64 com .NET Framework, sem baixar dependências para o usuário.
+- 58 verificações do instalador (28 de parser/política/payload/seleção e 30 de cópia/restore/configuração/falhas), com firmware simulado e pastas temporárias.
+- Releitura de payload embutido e hashes, configuração do sistema opcional desativada quando ausente, rejeição de caminhos relativos e registros inconsistentes.
+- Leitura local sem elevação confirmou as ESPs e seus volumes; consultas privilegiadas UEFI/BitLocker ficaram desconhecidas e bloqueadas, como esperado.
+- GUI renderizada em modo de demonstração, com dados fictícios e ações de escrita desativadas (`docs/installer.png`).
+- Não foi executada instalação/desinstalação física pelo EXE: a instalação personalizada Secure Boot existente foi preservada. Emulação e testes de arquivos não substituem validação física do instalador.
+- O núcleo EFI permanece 0.1.0 e passa pelas mesmas quatro suítes C e pelos 12 cenários QEMU/OVMF descritos abaixo.
+- Revisão independente: corrigidos os casos de destino concorrente não pertencente ao instalador, registro maior do que o limite de leitura, seleção Windows ambígua e metadados pendentes de configuração. Os casos foram cobertos por regressões; limites de NVRAM/FAT32 elevado/perda de energia física continuam sem validação real.
+
 Edição preparada em 29/10/2026.
 
 ## Verificação local executada

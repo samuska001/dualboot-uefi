@@ -16,12 +16,18 @@ jobs:
       - name: Build EFI
         shell: pwsh
         run: ./scripts/build.ps1
+      - name: Installer tests and standalone EXE
+        shell: pwsh
+        run: ./scripts/build-installer.ps1 -SkipEfiBuild
       - name: Package
         shell: pwsh
         run: ./scripts/package.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: DualBoot-0.1.0
+          name: DualBoot-0.2.0
           path: |
             dist/DualBoot-0.1.0.zip
             dist/SHA256SUMS.txt
+            dist/DualBoot-Setup-0.2.0.exe
+            dist/DualBoot-Setup-0.2.0.zip
+            dist/SHA256SUMS-0.2.0.txt

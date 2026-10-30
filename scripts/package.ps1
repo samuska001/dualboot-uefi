@@ -10,7 +10,7 @@ Copy-Item -LiteralPath (Join-Path $root 'config\dualboot.ini') -Destination $efi
 Copy-Item -LiteralPath (Join-Path $root 'themes') -Destination $efi -Recurse
 foreach ($name in @('README.md','LICENSE','THIRD_PARTY.md','CHANGELOG.md')) { Copy-Item -LiteralPath (Join-Path $root $name) -Destination $package }
 New-Item -ItemType Directory -Path (Join-Path $package 'docs') | Out-Null
-foreach ($name in @('MANUAL.md','VALIDACAO.md','menu.png')) { Copy-Item -LiteralPath (Join-Path $root ('docs\'+$name)) -Destination (Join-Path $package 'docs') }
+foreach ($name in @('MANUAL.md','INSTALADOR.md','VALIDACAO.md','menu.png','installer.png')) { Copy-Item -LiteralPath (Join-Path $root ('docs\'+$name)) -Destination (Join-Path $package 'docs') }
 $hashes = Get-ChildItem -LiteralPath $package -Recurse -File | Sort-Object FullName | ForEach-Object {
     (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $_.FullName.Substring($package.Length+1).Replace('\','/')
 }

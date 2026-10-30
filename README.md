@@ -2,11 +2,23 @@
 
 Escolha **Windows ou SteamOS antes de o sistema iniciar**, usando teclado ou um controle compatível. Gerenciador UEFI x86-64 escrito em C, com dois cartões visuais, tema por arquivos e diagnóstico USB integrado.
 
-**v0.1.0 experimental.** Testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
+**Instalador 0.2.0 experimental, com gerenciador EFI 0.1.0.** O gerenciador foi testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
+
+## Instalação fácil no Windows
+
+1. Baixe [**DualBoot-Setup-0.2.0.exe**](https://github.com/samuska001/dualboot-uefi/releases/download/v0.2.0/DualBoot-Setup-0.2.0.exe).
+2. Abra, aceite a solicitação de administrador e confira os sistemas encontrados.
+3. Escolha sistema padrão e tempo e clique **Instalar no SSD**.
+
+O assistente detecta GUIDs e caminhos, gera a configuração, cria o registro de restauração e confere a cópia. Também prepara um pendrive FAT32, salva mudanças de padrão/tempo e restaura instalações criadas por ele. **Não precisa abrir terminal ou copiar arquivos.** [Manual simples do instalador](docs/INSTALADOR.md).
+
+![Instalador em demonstração, com sistemas fictícios](docs/installer.png)
+
+Windows 10/11 x64 e .NET Framework 4.8. A instalação pública exige Secure Boot desligado; o SSD automático exige criptografia do Windows confirmada desligada e uma ESP compatível. Instalações manuais/personalizadas existentes são preservadas. O instalador não muda essas proteções nem inclui certificados privados. Seu fluxo real de escrita no SSD ainda precisa de validação física; testes simulados e limitações estão em [VALIDACAO.md](docs/VALIDACAO.md).
 
 ![Menu com Windows selecionado](docs/menu.png)
 
-## Baixar e começar
+## Alternativa manual pelo pendrive
 
 1. Baixe **DualBoot-0.1.0.zip** na [página de versões](https://github.com/samuska001/dualboot-uefi/releases/tag/v0.1.0). O arquivo “Source code” contém os fontes, sem executáveis.
 2. Extraia o ZIP e leia o [manual de instalação e uso](docs/MANUAL.md).
@@ -43,9 +55,12 @@ Windows x64 com **PowerShell 7**. Para compilar, não precisa de QEMU:
 .\scripts\test.ps1
 .\scripts\build.ps1
 .\scripts\package.ps1
+.\scripts\build-installer.ps1 -SkipEfiBuild
 ```
 
-Para a verificação completa, instale [7-Zip](https://www.7-zip.org/) em seu local padrão ou disponibilize `7z.exe` no PATH, depois:
+`build-installer.ps1` usa o compilador do .NET Framework do Windows, executa os testes do instalador e cria o EXE com payload e manual embutidos. Para conferir a interface sem privilégios e sem alterar discos/firmware, abra o EXE com `--demo`.
+
+Para a verificação completa do gerenciador EFI, instale [7-Zip](https://www.7-zip.org/) em seu local padrão ou disponibilize `7z.exe` no PATH, depois:
 
 ```powershell
 .\scripts\setup-tools.ps1 -WithQemu

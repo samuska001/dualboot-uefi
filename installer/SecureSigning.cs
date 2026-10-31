@@ -45,7 +45,8 @@ namespace DualBoot.Installer {
   }
   static string Quote(string s){return "'"+s.Replace("'","''")+"'";}
   static string Run(string script) {
-   var start=new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),"System32\\WindowsPowerShell\\v1.0\\powershell.exe"),"-NoProfile -NonInteractive -EncodedCommand "+Convert.ToBase64String(Encoding.Unicode.GetBytes("$ErrorActionPreference='Stop';"+script)));
+   const string initialize="$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';Import-Module (Join-Path $PSHOME 'Modules\\Microsoft.PowerShell.Security\\Microsoft.PowerShell.Security.psd1') -ErrorAction Stop;";
+   var start=new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),"System32\\WindowsPowerShell\\v1.0\\powershell.exe"),"-NoProfile -NonInteractive -EncodedCommand "+Convert.ToBase64String(Encoding.Unicode.GetBytes(initialize+script)));
    start.UseShellExecute=false;start.CreateNoWindow=true;start.RedirectStandardOutput=true;start.RedirectStandardError=true;
    using(var p=Process.Start(start)){var err=p.StandardError.ReadToEndAsync();var stdout=p.StandardOutput.ReadToEndAsync();if(!p.WaitForExit(120000)){p.Kill();throw new TimeoutException("Signing command timed out");}string result=stdout.Result; if(p.ExitCode!=0)throw new CryptographicException("Windows signing failed: "+err.Result);return result;}
   }

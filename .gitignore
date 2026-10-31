@@ -11,3 +11,8 @@ backups/
 *.pem
 diagnostic.txt
 dualboot.local.ini
+__pycache__/
+*.pyc
+resultado/
+resultado-*/
+instalacao.json

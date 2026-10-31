@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.bmp binary
+*.png binary
+*.exe binary
+*.zip binary
+extras/steamos/display-choice/gamescope-shim text eol=lf

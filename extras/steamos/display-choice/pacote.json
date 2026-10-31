@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "session_sha256": "e1499b725efd8afcf5693b5dc240d7311d2bbc389b92df1bb9eea8dd5688d23e",
+  "sha256": {
+    "telas.py": "fdaa2453b7a7fdb5141db32be5fc416f53b1293046cf3cfb6c9e672575d0bf5d",
+    "gamescope-shim": "1021daf88e3c90650e2b65d43a45343b2fb48f8f2620785d34057b39449b8516",
+    "instalar.sh": "38d396ee4c83bcec8e11e445c3ee13845db1cd847c3be5f9f16ce42d3622d51d",
+    "LEIA-ME.md": "7f8abcf8915f6a5064fd1a49d441c1f1a9fdd459e99fb8db9f8d49e25134f5ef"
+  }
+}

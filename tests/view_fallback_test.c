@@ -17,7 +17,7 @@ int main(void){
  DbPlatform p={0};p.st=&st;p.bs=&bs;p.gop=&gop;p.width=640;p.height=400;p.canvas=calloc(640u*400u,4);CHECK(p.canvas);p.targets[0].available=p.targets[1].available=1;
  uint8_t b[58]={0};b[0]='B';b[1]='M';b[2]=58;b[10]=54;b[14]=40;b[18]=1;b[22]=1;b[26]=1;b[28]=24;b[56]=255;
  DbMenuAssets a={0};a.icons[0]=a.icons[1]=b;a.icon_len[0]=a.icon_len[1]=58;DbConfig c;db_defaults(&c);
- CHECK(draw_menu(&p,&c,&a,0,0,0,""));CHECK(!p.canvas);CHECK(strstr(output,"Windows")&&strstr(output,"SteamOS"));
+ CHECK(draw_menu(&p,&c,&a,0,0,0,"",600));CHECK(!p.canvas);CHECK(strstr(output,"Windows")&&strstr(output,"SteamOS"));
  output_len=0;output[0]=0;draw_diagnostic(&p,"CARREGADOR RETORNOU: TEST ERROR");CHECK(strstr(output,"TEST ERROR"));
  puts("PASS: failed graphics immediately renders keyboard fallback and preserves diagnostic error");return 0;
 }

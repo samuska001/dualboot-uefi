@@ -1,6 +1,6 @@
-﻿# Instalação fácil — DualBoot Setup 0.3.0 experimental
+# Instalação fácil — DualBoot Setup 0.4.0 experimental
 
-Baixe a edição experimental 0.3.0 na página de releases. O modo tradicional sem assinatura continua disponível; para o novo modo assinado siga SECUREBOOT.md.
+Baixe a edição experimental 0.4.0 na página de releases. O modo tradicional sem assinatura continua disponível; para o novo modo assinado siga SECUREBOOT.md.
 
 1. Abra o EXE obtido da release oficial do projeto.
 2. Abra o arquivo e aceite a solicitação normal de administrador do Windows.

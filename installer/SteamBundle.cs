@@ -12,6 +12,26 @@ namespace DualBoot.Installer {
   static void Put(byte[] b,int p,uint n){Buffer.BlockCopy(BitConverter.GetBytes(n),0,b,p,4);}
   static int Int(uint n){Need(n<=Int32.MaxValue,"PE excessivo.");return (int)n;}
   static int Align(int n,int a){Need(a>0&&(a&(a-1))==0&&a<=65536,"Alinhamento PE invalido.");return checked((n+a-1)/a*a);}
+  // Modify only the known success format in a copied, read-only ELF data section.
+  // Verification instructions, return values, relocations and error strings remain identical.
+  public static byte[] QuietHashsum(byte[] data){
+   Need(data!=null,"Modulo ausente.");string bytes=Encoding.ASCII.GetString(data);const string format="%s: OK\n\0";
+   int at=bytes.IndexOf(format,StringComparison.Ordinal);if(at<0)return data;
+   Need(bytes.IndexOf(format,at+1,StringComparison.Ordinal)<0,"Formato de sucesso ambiguo.");
+   Need(data.Length>=64&&U(data,0)==0x464c457f&&data[4]==2&&data[5]==1,"ELF64 little-endian esperado.");
+   Need(bytes.Contains("%s: HASH MISMATCH\n\0")&&bytes.Contains("%s: READ ERROR\n\0"),"Mensagens de verificacao desconhecidas.");
+   ulong table64=Q(data,40);int count=W(data,60),strings=W(data,62);
+   Need(table64<=(ulong)data.Length&&W(data,58)==64&&count>0&&strings<count&&table64+(ulong)count*64<=(ulong)data.Length,"Tabela ELF invalida.");
+   int table=(int)table64,sh=table+strings*64;ulong namesAt=Q(data,sh+24),namesSize=Q(data,sh+32);
+   Need(namesAt<=(ulong)data.Length&&namesSize<=(ulong)data.Length-namesAt,"Nomes de secoes truncados.");
+   byte[] names=Slice(data,(int)namesAt,(int)namesSize);int matching=0;
+   for(int i=0;i<count;i++){
+    int section=table+i*64;uint nameAt=U(data,section);Need(nameAt<(uint)names.Length,"Nome ELF invalido.");int stop=Array.IndexOf(names,(byte)0,(int)nameAt);Need(stop>=(int)nameAt,"Nome ELF sem terminador.");
+    string name=Encoding.ASCII.GetString(names,(int)nameAt,stop-(int)nameAt);ulong offset=Q(data,section+24),size=Q(data,section+32);
+    if(offset<=(ulong)at && size>=(ulong)at-offset+8){Need(offset<=(ulong)data.Length&&size<=(ulong)data.Length-offset,"Secao ELF truncada.");Need(name.StartsWith(".rodata",StringComparison.Ordinal)&&U(data,section+4)==1&&(Q(data,section+8)&7)==2,"Formato sobreposto a secao executavel ou gravavel.");matching++;}
+   }
+   Need(matching==1,"Formato de sucesso fora de uma unica secao de dados somente leitura.");byte[] result=(byte[])data.Clone();result[at]=0;return result;
+  }
   static byte[] Slice(byte[] b,int p,int n){Need(p>=0&&n>=0&&p<=b.Length-n,"Recurso truncado.");byte[] r=new byte[n];Buffer.BlockCopy(b,p,r,0,n);return r;}
   public static byte[] Build(SteamInventory inventory,Func<byte[],byte[]> signKernel){return Build(inventory,signKernel,null);}
   public static byte[] Build(SteamInventory inventory,Func<byte[],byte[]> signKernel,string sessionId){
@@ -40,7 +60,7 @@ namespace DualBoot.Installer {
    Need(raw[3]+size[3]==image.Length,"Overlay PE nao suportado.");Need(U(image,opt+152)==(uint)rva[3]&&U(image,opt+156)<=(uint)size[3],"Diretorio reloc invalido.");
    int relocLen=Int(U(image,opt+156)),pos=0;while(pos<relocLen){Need(pos<=relocLen-8,"Reloc truncada.");int p=raw[3]+pos;uint page=U(image,p);int block=Int(U(image,p+4));Need(block>=8&&block%2==0&&block<=relocLen-pos,"Bloco reloc invalido.");for(int j=8;j<block;j+=2){ushort entry=W(image,p+j);int type=entry>>12;Need(type==0||type==10,"Tipo reloc desconhecido.");if(type!=0)Need((ulong)page+(uint)(entry&4095)+8<=(ulong)rva[2],"Reloc aponta para recurso movido.");}pos+=block;}
    Need(U(image,raw[2])==0x676d696d&&U(image,raw[2]+4)==0&&Q(image,raw[2]+8)==24,"Cabecalho modules GRUB invalido.");ulong end64=Q(image,raw[2]+16);Need(end64>=24&&end64<=(ulong)size[2],"Modules truncados.");int end=(int)end64;pos=24;byte[] prefix=null;List<byte[]> entries=new List<byte[]>();int elfCount=0,memdiskCount=0;
-   while(pos<end){Need(pos<=end-8,"Modulo truncado.");int p=raw[2]+pos;uint type=U(image,p);int n=Int(U(image,p+4));Need(n>=8&&n%8==0&&n<=end-pos,"Modulo invalido.");byte[] entry=Slice(image,p,n);if(type==0){Need(n>=12&&U(entry,8)==0x464c457f,"Modulo ELF esperado.");entries.Add(entry);elfCount++;}else if(type==3){Need(prefix==null,"Prefix duplicado.");prefix=entry;Need(Encoding.ASCII.GetString(entry,8,n-8).TrimEnd('\0')=="(memdisk)/boot/grub","Prefix nao suportado.");}else if(type==1){memdiskCount++;}else throw new InvalidDataException("Tipo modulo GRUB desconhecido.");pos+=n;}
+   while(pos<end){Need(pos<=end-8,"Modulo truncado.");int p=raw[2]+pos;uint type=U(image,p);int n=Int(U(image,p+4));Need(n>=8&&n%8==0&&n<=end-pos,"Modulo invalido.");byte[] entry=Slice(image,p,n);if(type==0){Need(n>=12&&U(entry,8)==0x464c457f,"Modulo ELF esperado.");byte[] elf=Slice(entry,8,n-8),quiet=QuietHashsum(elf);if(!Object.ReferenceEquals(elf,quiet))Buffer.BlockCopy(quiet,0,entry,8,quiet.Length);entries.Add(entry);elfCount++;}else if(type==3){Need(prefix==null,"Prefix duplicado.");prefix=entry;Need(Encoding.ASCII.GetString(entry,8,n-8).TrimEnd('\0')=="(memdisk)/boot/grub","Prefix nao suportado.");}else if(type==1){memdiskCount++;}else throw new InvalidDataException("Tipo modulo GRUB desconhecido.");pos+=n;}
    Need(elfCount>0&&prefix!=null&&memdiskCount==1,"Core GRUB incompleto.");entries.Add(Module(1,archive));entries.Add(prefix);
    byte[] blob;using(MemoryStream m=new MemoryStream()){m.Write(new byte[24],0,24);foreach(byte[] e in entries)m.Write(e,0,e.Length);blob=m.ToArray();}Put(blob,0,0x676d696d);Buffer.BlockCopy(BitConverter.GetBytes((ulong)24),0,blob,8,8);Buffer.BlockCopy(BitConverter.GetBytes((ulong)blob.Length),0,blob,16,8);
    int newRaw=Align(blob.Length,fa),newVirtual=Align(blob.Length,sa),relocRaw=checked(raw[2]+newRaw),relocRva=checked(rva[2]+newVirtual);byte[] output=new byte[checked(relocRaw+size[3])];Buffer.BlockCopy(image,0,output,0,raw[2]);Buffer.BlockCopy(blob,0,output,raw[2],blob.Length);Buffer.BlockCopy(image,raw[3],output,relocRaw,size[3]);

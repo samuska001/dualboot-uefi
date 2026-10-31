@@ -1,4 +1,4 @@
-# Secure Boot — DualBoot Setup 0.3.0 experimental
+# Secure Boot — DualBoot Setup 0.4.0 experimental
 
 O assistente prepara cópias EFI assinadas por computador. O cadastro do certificado no MokManager e a ativação na BIOS/UEFI continuam manuais. O EXE Windows não recebeu assinatura comercial: a assinatura dos arquivos EFI é separada.
 

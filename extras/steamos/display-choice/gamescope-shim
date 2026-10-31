@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+# DualBoot-Telas v1: keep all stock arguments except the output preference.
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from telas import main
+main(['--gamescope', *sys.argv[1:]])

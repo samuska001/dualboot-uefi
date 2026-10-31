@@ -13,6 +13,9 @@ jobs:
       - name: Native tests
         shell: pwsh
         run: ./scripts/test.ps1
+      - name: Optional SteamOS helper and collector tests
+        shell: pwsh
+        run: ./scripts/test-extras.ps1
       - name: Build EFI
         shell: pwsh
         run: ./scripts/build.ps1
@@ -24,10 +27,11 @@ jobs:
         run: ./scripts/package.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: DualBoot-0.3.0
+          name: DualBoot-0.4.0
           path: |
             dist/DualBoot-0.1.0.zip
             dist/SHA256SUMS.txt
-            dist/DualBoot-Setup-0.3.0.exe
-            dist/DualBoot-Setup-0.3.0.zip
-            dist/SHA256SUMS-0.3.0.txt
+            dist/DualBoot-Setup-0.4.0.exe
+            dist/DualBoot-Setup-0.4.0.zip
+            dist/SHA256SUMS-0.4.0.txt
+            dist/DualBoot-SteamOS-Tools-0.4.0.zip

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -7,7 +7,7 @@ using System.Runtime.Versioning;
 using System.Web.Script.Serialization;
 [assembly:TargetFramework(".NETFramework,Version=v4.8",FrameworkDisplayName=".NET Framework 4.8")]
 [assembly:System.Reflection.AssemblyTitle("DualBoot Setup")]
-[assembly:System.Reflection.AssemblyVersion("0.3.0.0")]
+[assembly:System.Reflection.AssemblyVersion("0.4.0.0")]
 [assembly:System.Reflection.AssemblyProduct("DualBoot UEFI")]
 namespace DualBoot.Installer {
     public static class Program {

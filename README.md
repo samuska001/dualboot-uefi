@@ -1,12 +1,12 @@
-﻿# DualBoot UEFI
+# DualBoot UEFI
 
 Escolha **Windows ou SteamOS antes de o sistema iniciar**, usando teclado ou um controle compatível. Gerenciador UEFI x86-64 escrito em C, com dois cartões visuais, tema por arquivos e diagnóstico USB integrado.
 
-**Instalador 0.3.0 experimental, com assistente de Secure Boot.** Veja [SECUREBOOT.md](docs/SECUREBOOT.md) para assinatura local, teste USB, cadastro MOK e ativação manual na BIOS. O fluxo completo do novo EXE ainda precisa de teste físico em outro PC. O gerenciador foi testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
+**Instalador 0.4.0 experimental, com assistente de Secure Boot.** Veja [SECUREBOOT.md](docs/SECUREBOOT.md) para assinatura local, teste USB, cadastro MOK e ativação manual na BIOS. O fluxo completo do novo EXE ainda precisa de teste físico em outro PC. O gerenciador foi testado fisicamente em um PC com Flydigi Direwolf 4 no modo compatível com Xbox 360 (`045E:028E`, interface `FF/5D/01`). Outros PCs, controles, receptores, Bluetooth e outras distribuições Linux precisam de validação própria.
 
 ## Instalação fácil no Windows
 
-1. Baixe [**DualBoot-Setup-0.3.0.exe**](https://github.com/samuska001/dualboot-uefi/releases/download/v0.3.0/DualBoot-Setup-0.3.0.exe).
+1. Baixe [**DualBoot-Setup-0.4.0.exe**](https://github.com/samuska001/dualboot-uefi/releases/download/v0.4.0/DualBoot-Setup-0.4.0.exe).
 2. Abra, aceite a solicitação de administrador e confira os sistemas encontrados.
 3. Escolha sistema padrão e tempo e clique **Instalar no SSD**.
 
@@ -18,6 +18,15 @@ Windows 10/11 x64 e .NET Framework 4.8. O fluxo tradicional sem assinatura exige
 
 ![Menu com Windows selecionado](docs/menu.png)
 
+## Novidades da edição 0.4.0
+
+- Menu sem cartões, com ícones transparentes, seleção centralizada e expansão de 180 ms. A resposta é rápida no início e desacelera até o tamanho final, sem rebote.
+- Filtragem de bordas/alfa, cache do fundo e transferência parcial ao firmware para reduzir trabalho durante as animações. Atualizações solicitadas a cada 16,67 ms; a taxa física depende do firmware.
+- Cópias assinadas SteamOS com silenciamento conservador da mensagem conhecida de checksum bem-sucedido, preservando verificação, erros e demais bytes do módulo. Layouts desconhecidos não são alterados por tentativa.
+- [Ferramentas opcionais SteamOS](extras/steamos/README.md): seletor Monitor/TV e coletores de desempenho, vídeo e animação. Baixe [DualBoot-SteamOS-Tools-0.4.0.zip](https://github.com/samuska001/dualboot-uefi/releases/download/v0.4.0/DualBoot-SteamOS-Tools-0.4.0.zip). Elas são instaladas/executadas separadamente no Linux.
+
+[Detalhes da atualização e limites](docs/ATUALIZACOES-0.4.0.md). O tema público mantém fundo neutro e logos oficiais identificados; imagens particulares e registros de hardware não integram o pacote.
+
 ## Alternativa manual pelo pendrive
 
 1. Baixe **DualBoot-0.1.0.zip** na [página de versões](https://github.com/samuska001/dualboot-uefi/releases/tag/v0.1.0). O arquivo “Source code” contém os fontes, sem executáveis.
@@ -26,13 +35,13 @@ Windows 10/11 x64 e .NET Framework 4.8. O fluxo tradicional sem assinatura exige
 4. Inicie pela entrada UEFI do pendrive. A primeira tela é o diagnóstico.
 5. Salve o relatório com F2, configure os GUIDs e caminhos do **seu PC** em `EFI/BOOT/dualboot.ini` e teste cada sistema pelo USB.
 
-O pacote não instala Windows/SteamOS, não cria partições e não configura seus destinos sozinho. Os dois destinos vêm desativados e sem contagem automática. Esse ZIP EFI 0.1.0 antigo não é assinado para Secure Boot; o novo assistente 0.3.0 prepara as cópias assinadas por computador. Veja os requisitos no manual antes de mudar configurações do firmware.
+O pacote não instala Windows/SteamOS, não cria partições e não configura seus destinos sozinho. Os dois destinos vêm desativados e sem contagem automática. Esse ZIP EFI 0.1.0 antigo não é assinado para Secure Boot; o novo assistente 0.4.0 prepara as cópias assinadas por computador. Veja os requisitos no manual antes de mudar configurações do firmware.
 
 ## Controles
 
 | Comando | Ação |
 | --- | --- |
-| Direcional / analógico esquerdo / setas | Escolher sistema |
+| Direcional / analógico esquerdo / setas | Escolher sistema e animar o foco |
 | A / Enter | Iniciar seleção |
 | B / Esc | Sair ou voltar do diagnóstico |
 | W / S | Selecionar Windows / SteamOS |

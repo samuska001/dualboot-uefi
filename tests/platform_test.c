@@ -27,6 +27,11 @@ static EFI_STATUS EFIAPI start(EFI_HANDLE h,size_t*n,CHAR16**out){(void)h;(void)
 static EFI_STATUS EFIAPI blt(EFI_GOP*self,void*pixel,uint32_t op,size_t sx,size_t sy,size_t dx,size_t dy,size_t w,size_t h,size_t delta){CHECK(self==&gop);CHECK(op==0&&*(uint32_t*)pixel==0);CHECK(sx==0&&sy==0&&dx==0&&dy==0&&delta==0);CHECK(w==mode_info.HorizontalResolution&&h==mode_info.VerticalResolution);clears++;return fill_fails?EFI_ABORTED:EFI_SUCCESS;}
 static EFI_STATUS EFIAPI set_mode(EFI_GOP*self,uint32_t target){(void)self;restores++;if(restore_fails)return EFI_ABORTED;mode.Mode=target;mode_info.HorizontalResolution=1280;mode_info.VerticalResolution=800;return 0;}
 static EFI_STATUS EFIAPI unload(EFI_HANDLE h){(void)h;return 0;}
+static int partial_blits,full_blits,reject_partial;
+static EFI_STATUS EFIAPI region_blt(EFI_GOP*self,void*buffer,uint32_t op,size_t sx,size_t sy,size_t dx,size_t dy,size_t w,size_t h,size_t delta){
+ CHECK(self==&gop&&buffer&&op==2);if(!delta){CHECK(sx==0&&sy==0&&dx==0&&dy==0&&w==1280&&h==800);full_blits++;return 0;}
+ CHECK(sx==100&&sy==200&&dx==100&&dy==200&&w==300&&h==250&&delta==1280*4);partial_blits++;return reject_partial?EFI_ABORTED:EFI_SUCCESS;
+}
 int main(int argc,char**argv){
  EFI_BOOT_SERVICES bs={0};bs.AllocatePool=pool;bs.FreePool=release;bs.HandleProtocol=protocol;bs.LocateHandleBuffer=locate;bs.LoadImage=load;bs.StartImage=start;bs.UnloadImage=unload;bs.SetWatchdogTimer=watch;
  io.UsbGetDeviceDescriptor=descriptor;io.UsbGetInterfaceDescriptor=interface;io.UsbGetEndpointDescriptor=endpoint;io.UsbAsyncInterruptTransfer=transfer;
@@ -46,5 +51,9 @@ int main(int argc,char**argv){
   gop.Mode=&mode;gop.SetMode=set_mode;p.gop=&gop;p.old_mode=2;p.width=1280;p.height=800;p.canvas=malloc(16);change_mode=1;CHECK(platform_launch(&p,0)==EFI_ABORTED);CHECK(mode.Mode==2&&restores==1);
   restore_fails=1;CHECK(platform_launch(&p,0)==EFI_ABORTED);CHECK(p.canvas==0&&p.gop==0);restore_fails=0;
  }
- platform_shutdown(&p);puts("PASS: USB recovery and EFI handoff lifecycle");return 0;
+ {DbPlatform display={0};display.width=1280;display.height=800;display.canvas=calloc(1280u*800u,4);CHECK(display.canvas);display.gop=&gop;gop.Blt=region_blt;
+  platform_present_region(&display,100,200,300,250);CHECK(partial_blits==1&&full_blits==0);
+  reject_partial=1;platform_present_region(&display,100,200,300,250);CHECK(partial_blits==2&&full_blits==1&&display.canvas);
+  platform_present_region(&display,-1,0,300,250);CHECK(full_blits==2);free(display.canvas);}
+ platform_shutdown(&p);puts("PASS: USB recovery, EFI handoff and partial GOP transfer/fallback");return 0;
 }

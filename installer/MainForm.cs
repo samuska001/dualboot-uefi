@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Drawing;
 using System.Reflection;
@@ -16,14 +16,14 @@ namespace DualBoot.Installer {
         readonly ProgressBar progress=new ProgressBar();bool busy;
         static readonly Color background=Color.FromArgb(17,21,29),card=Color.FromArgb(27,33,44),foreground=Color.FromArgb(234,239,247),muted=Color.FromArgb(173,186,206),accent=Color.FromArgb(65,126,238);
         public MainForm(bool demonstration){
-            demo=demonstration;Text="DualBoot Setup 0.3.0";ClientSize=new Size(960,760);MinimumSize=new Size(940,740);StartPosition=FormStartPosition.CenterScreen;
+            demo=demonstration;Text="DualBoot Setup 0.4.0";ClientSize=new Size(960,760);MinimumSize=new Size(940,740);StartPosition=FormStartPosition.CenterScreen;
             BackColor=background;ForeColor=foreground;Font=new Font("Segoe UI",10);AutoScaleMode=AutoScaleMode.Dpi;
             var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(26),ColumnCount=1,RowCount=7};
             foreach(var style in new[]{new RowStyle(SizeType.Absolute,82),new RowStyle(SizeType.Absolute,80),new RowStyle(SizeType.Absolute,245),new RowStyle(SizeType.Absolute,68),new RowStyle(SizeType.Absolute,88),new RowStyle(SizeType.Percent,100),new RowStyle(SizeType.Absolute,12)})layout.RowStyles.Add(style);
             Controls.Add(layout);
             var header=new Panel{Dock=DockStyle.Fill};header.Controls.Add(new Label{Text="DualBoot",Font=new Font("Segoe UI",27,FontStyle.Bold),AutoSize=true,Location=new Point(0,0)});
             header.Controls.Add(new Label{Text=demo?"DEMONSTRAÇÃO · nenhuma alteração em discos ou firmware":"Instale e configure seu menu de boot",ForeColor=muted,AutoSize=true,Location=new Point(3,51)});
-            header.Controls.Add(new Label{Text="0.3.0 · EXPERIMENTAL",Width=215,Dock=DockStyle.Right,TextAlign=ContentAlignment.MiddleRight,ForeColor=muted});layout.Controls.Add(header);
+            header.Controls.Add(new Label{Text="0.4.0 · EXPERIMENTAL",Width=215,Dock=DockStyle.Right,TextAlign=ContentAlignment.MiddleRight,ForeColor=muted});layout.Controls.Add(header);
             summary.Dock=DockStyle.Fill;summary.BackColor=card;summary.Padding=new Padding(16,10,10,10);summary.Text="Verificando seu computador…";layout.Controls.Add(summary);
             var columns=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,Padding=new Padding(0,16,0,0)};columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,53));columns.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,47));layout.Controls.Add(columns);
             var systems=Section("1   Sistemas encontrados");var settings=Section("2   Sua configuração");columns.Controls.Add(systems);columns.Controls.Add(settings);

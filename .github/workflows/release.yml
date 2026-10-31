@@ -6,12 +6,12 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-v0.3.0
+  group: release-v0.4.0
   cancel-in-progress: false
 jobs:
   publish:
     if: >-
-      github.repository == 'samuska001/dualboot-uefi' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: publish v0.3.0'))
+      github.repository == 'samuska001/dualboot-uefi' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: publish v0.4.0'))
     runs-on: windows-latest
     permissions:
       contents: write
@@ -25,21 +25,28 @@ jobs:
       - name: Native regression tests
         shell: pwsh
         run: ./scripts/test.ps1
+      - name: Optional SteamOS helper and collector tests
+        shell: pwsh
+        run: ./scripts/test-extras.ps1
       - name: Build and test the standalone installer
         shell: pwsh
         run: ./scripts/build-installer.ps1
       - name: Test packaged EXE
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath "$PWD/dist/DualBoot-Setup-0.3.0.exe" -ArgumentList '--self-test' -WindowStyle Hidden -Wait -PassThru
+          $process = Start-Process -FilePath "$PWD/dist/DualBoot-Setup-0.4.0.exe" -ArgumentList '--self-test' -WindowStyle Hidden -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw 'Packaged EXE self-test failed' }
+      - name: Local signing lifecycle with disposable laboratory identities
+        shell: pwsh
+        run: ./scripts/test-secure-signing-lifecycle.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: DualBoot-release-0.3.0
+          name: DualBoot-release-0.4.0
           path: |
-            dist/DualBoot-Setup-0.3.0.exe
-            dist/DualBoot-Setup-0.3.0.zip
-            dist/SHA256SUMS-0.3.0.txt
+            dist/DualBoot-Setup-0.4.0.exe
+            dist/DualBoot-Setup-0.4.0.zip
+            dist/SHA256SUMS-0.4.0.txt
+            dist/DualBoot-SteamOS-Tools-0.4.0.zip
           if-no-files-found: error
       - name: Publish verified prerelease
         shell: pwsh

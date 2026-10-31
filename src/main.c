@@ -21,10 +21,11 @@ static void load_config(DbPlatform*p,DbConfig*c,DbMenuAssets*a){
  size_t theme_len=0;char*theme=asset(p,c->theme,"theme.ini",&theme_len);if(theme){if(!db_theme_parse(c,theme,theme_len))p->config_error=1;platform_free(p,theme);}
  a->background=asset(p,c->theme,"background.bmp",&a->background_len);a->icons[0]=asset(p,c->theme,"windows.bmp",&a->icon_len[0]);a->icons[1]=asset(p,c->theme,"steamos.bmp",&a->icon_len[1]);
 }
-static int draw_menu(DbPlatform*p,const DbConfig*c,DbMenuAssets*a,unsigned selected,uint32_t remaining,int timer,const char*message){
+static int draw_menu(DbPlatform*p,const DbConfig*c,DbMenuAssets*a,unsigned selected,uint32_t remaining,int timer,const char*message,uint64_t elapsed){
  if(!p->canvas){p->st->ConOut->SetCursorPosition(p->st->ConOut,0,0);platform_console(p,"DUALBOOT 0.1.0\r\n\r\n");for(unsigned pos=0;pos<2;pos++){unsigned i=pos^c->first;platform_console(p,selected==i?"> ":"  ");platform_console(p,c->entries[i].label);platform_console(p,p->targets[i].available?" [OK]          \r\n":" [INDISPONIVEL]\r\n");}platform_console(p,"\r\nSetas: escolher | Enter: iniciar | D: diagnostico | Esc: sair\r\n");platform_console(p,message);return 1;}
- if(!db_menu_draw(p,c,a,selected,remaining,timer))return 0;
- platform_present(p);if(!p->canvas)return draw_menu(p,c,a,selected,remaining,timer,message);return 1;
+ if(!db_menu_draw_frame(p,c,a,selected,remaining,timer,elapsed))return 0;
+ if(a->cache&&a->cache->restored){DbBox b=a->cache->region;platform_present_region(p,b.x,b.y,b.width,b.height);}else platform_present(p);
+ if(!p->canvas)return draw_menu(p,c,a,selected,remaining,timer,message,elapsed);return 1;
 }
 static void draw_diagnostic(DbPlatform*p,const char*report_status){
  if(!p->canvas){p->st->ConOut->SetCursorPosition(p->st->ConOut,0,0);platform_console(p,"DUALBOOT - DIAGNOSTICO\r\nF2 salva diagnostic.txt | M abre menu | Esc sai\r\n");platform_console(p,p->usb.active?"Receptor ativo\r\n":"Receptor nao inicializado\r\n");platform_console(p,report_status);platform_console(p,"\r\n");platform_console(p,p->inventory);return;}
@@ -44,6 +45,8 @@ EFI_STATUS EFIAPI EfiMain(EFI_HANDLE image,EFI_SYSTEM_TABLE*st){
  if(sbat_data[0]!='s')return EFI_ABORTED;
 #endif
  DbPlatform*p=&machine;if(!platform_init(p,image,st))return EFI_ABORTED;DbMenuAssets assets={0};load_config(p,&config,&assets);platform_scan_boot(p,&config);
+ DbMenuCache cache={0};assets.cache=&cache;
+ if(p->canvas){cache.capacity=db_menu_cache_bytes(p->width,p->height);if(cache.capacity&&EFI_ERROR(p->bs->AllocatePool(2,cache.capacity,(void**)&cache.pixels)))cache.pixels=0;}
 #ifdef DB_MOK_REPORT
  db_secureboot_report(p);
 #endif
@@ -53,10 +56,11 @@ EFI_STATUS EFIAPI EfiMain(EFI_HANDLE image,EFI_SYSTEM_TABLE*st){
 #endif
  int timer=config.timeout>0&&!p->config_error&&p->targets[selected].available&&!diagnostic;uint64_t deadline=(uint64_t)config.timeout*1000;
  char message[96]="";const char*report_status="";if(p->config_error){db_copy(message,sizeof message,"CONFIGURACAO INVALIDA - CONTAGEM DESATIVADA");diagnostic=1;report_status=message;}
- EFI_EVENT tick=0;if(EFI_ERROR(p->bs->CreateEvent(0x80000000u,0,0,0,&tick))||EFI_ERROR(p->bs->SetTimer(tick,1,500000))){if(tick)p->bs->CloseEvent(tick);platform_shutdown(p);return EFI_ABORTED;}
- int first=1;platform_usb_scan(p);
+ EFI_EVENT tick=0;if(EFI_ERROR(p->bs->CreateEvent(0x80000000u,0,0,0,&tick))||EFI_ERROR(p->bs->SetTimer(tick,1,DB_FRAME_100NS))){if(tick)p->bs->CloseEvent(tick);platform_free(p,cache.pixels);platform_shutdown(p);return EFI_ABORTED;}
+ DbMenuMotion motion={0};assets.motion=&motion;db_menu_motion_update(&motion,selected,p->ticks);
+ int first=1;uint64_t clock_units=0;platform_usb_scan(p);
  for(;;){
-  char shortcut=0;unsigned actions=platform_poll_input(p,&shortcut);int redraw=first||diagnostic||actions||shortcut||timer;if(actions&DB_ACTIVITY)timer=0;
+  unsigned previous=selected;char shortcut=0;unsigned actions=platform_poll_input(p,&shortcut);int redraw=first||diagnostic||actions||shortcut||timer;if(actions&DB_ACTIVITY)timer=0;
   if(shortcut=='d'){diagnostic=1;timer=0;platform_log("DB:DIAGNOSTIC\n");}
   if(shortcut=='m'){diagnostic=0;standalone=0;timer=0;message[0]=0;report_status="";}
   if(diagnostic){
@@ -65,14 +69,18 @@ EFI_STATUS EFIAPI EfiMain(EFI_HANDLE image,EFI_SYSTEM_TABLE*st){
   }else{
    if(actions&DB_BACK){if(platform_stop_input(p))break;db_copy(message,sizeof message,"FALHA AO ENCERRAR USB - SAIDA BLOQUEADA");diagnostic=1;report_status=message;}if(actions&(DB_LEFT|DB_RIGHT))selected=1-selected;if(shortcut=='w')selected=0;if(shortcut=='s')selected=1;
    if((actions&DB_CONFIRM)||(timer&&p->ticks>=deadline)){
-    timer=0;if(p->targets[selected].available){p->bs->SetTimer(tick,0,0);EFI_STATUS s=platform_launch(p,selected);p->bs->SetTimer(tick,1,500000);char code[17];hex_text(code,s,16);db_copy(message,sizeof message,"CARREGADOR RETORNOU: ");size_t n=length(message);db_copy(message+n,sizeof(message)-n,code);}
+    timer=0;if(p->targets[selected].available){p->bs->SetTimer(tick,0,0);EFI_STATUS s=platform_launch(p,selected);p->bs->SetTimer(tick,1,DB_FRAME_100NS);char code[17];hex_text(code,s,16);db_copy(message,sizeof message,"CARREGADOR RETORNOU: ");size_t n=length(message);db_copy(message+n,sizeof(message)-n,code);}
     else {db_copy(message,sizeof message,p->targets[selected].status);platform_log("DB:TARGET_UNAVAILABLE\n");}
     diagnostic=1;standalone=0;report_status=message;
    }
   }
-  if(redraw){if(diagnostic)draw_diagnostic(p,report_status);else if(!draw_menu(p,&config,&assets,selected,timer?(uint32_t)((deadline-p->ticks+999)/1000):0,timer,message)){diagnostic=1;standalone=0;report_status="IMAGENS DO TEMA AUSENTES OU INVALIDAS - CONFIRA THEMES";draw_diagnostic(p,report_status);platform_log("DB:ASSET_INVALID\n");}}
+  if(selected!=previous)platform_log("DB:FOCUS_EXPAND\n");
+  int was_animating=motion.active,animating=db_menu_motion_update(&motion,selected,p->ticks);
+  uint64_t elapsed=animating?p->ticks-motion.started:DB_FOCUS_MS;
+  if(!diagnostic&&(was_animating||animating))redraw=1;
+  if(redraw){if(diagnostic){cache.valid=0;draw_diagnostic(p,report_status);}else if(!draw_menu(p,&config,&assets,selected,timer?(uint32_t)((deadline-p->ticks+999)/1000):0,timer,message,elapsed)){cache.valid=0;diagnostic=1;standalone=0;report_status="IMAGENS DO TEMA AUSENTES OU INVALIDAS - CONFIRA THEMES";draw_diagnostic(p,report_status);platform_log("DB:ASSET_INVALID\n");}}
   if(first){platform_log("DB:MENU\n");if(diagnostic)platform_log("DB:DIAGNOSTIC\n");first=0;}
-  size_t event_index=0;p->bs->WaitForEvent(1,&tick,&event_index);p->ticks+=50;
+  size_t event_index=0;p->bs->WaitForEvent(1,&tick,&event_index);clock_units+=DB_FRAME_100NS;p->ticks=clock_units/10000u;
  }
- p->bs->SetTimer(tick,0,0);p->bs->CloseEvent(tick);platform_free(p,assets.background);for(int i=0;i<2;i++)platform_free(p,assets.icons[i]);platform_shutdown(p);return EFI_SUCCESS;
+ p->bs->SetTimer(tick,0,0);p->bs->CloseEvent(tick);platform_free(p,cache.pixels);platform_free(p,assets.background);for(int i=0;i<2;i++)platform_free(p,assets.icons[i]);platform_shutdown(p);return EFI_SUCCESS;
 }

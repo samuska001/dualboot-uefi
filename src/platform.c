@@ -141,7 +141,7 @@ void platform_usb_scan(DbPlatform*p){
  }platform_free(p,handles);
 }
 unsigned platform_poll_input(DbPlatform*p,char*shortcut){
- unsigned actions=0;*shortcut=0;if(p->ticks%2000==0)platform_usb_scan(p);
+ unsigned actions=0;*shortcut=0;if(p->ticks>=p->next_usb_scan){p->next_usb_scan=p->ticks+2000;platform_usb_scan(p);}
  if(p->usb.active&&!p->usb.failed&&p->usb.packets){size_t tpl=p->bs->RaiseTPL(16);DbPad pad=p->usb.pad;p->bs->RestoreTPL(tpl);actions|=db_nav_update(&p->nav,&pad,p->ticks);}
  if(p->st->ConIn){EFI_INPUT_KEY key;for(int n=0;n<16&&!EFI_ERROR(p->st->ConIn->ReadKeyStroke(p->st->ConIn,&key));n++){
   actions|=DB_ACTIVITY;if(key.ScanCode==1||key.ScanCode==4)actions|=DB_LEFT;else if(key.ScanCode==2||key.ScanCode==3)actions|=DB_RIGHT;
@@ -217,3 +217,7 @@ void db_image(DbPlatform*p,const uint8_t*d,size_t len,int x,int y,int width,int 
  }
 }
 void platform_present(DbPlatform*p){if(p->canvas&&p->gop&&EFI_ERROR(p->gop->Blt(p->gop,p->canvas,2,0,0,0,0,p->width,p->height,0)))text_fallback(p);}
+void platform_present_region(DbPlatform*p,int x,int y,int width,int height){
+ if(x<0||y<0||width<=0||height<=0||x>(int)p->width-width||y>(int)p->height-height){platform_present(p);return;}
+ if(p->canvas&&p->gop&&EFI_ERROR(p->gop->Blt(p->gop,p->canvas,2,(size_t)x,(size_t)y,(size_t)x,(size_t)y,(size_t)width,(size_t)height,(size_t)p->width*4)))platform_present(p);
+}

@@ -11,6 +11,13 @@ namespace DualBoot.Installer {
   static void Reject(Action a,string name){try{a();}catch(InvalidDataException){checks++;return;}throw new Exception("Accepted: "+name);}
   static void Put(byte[] b,int p,uint n){Buffer.BlockCopy(BitConverter.GetBytes(n),0,b,p,4);}
   static void Word(byte[] b,int p,ushort n){Buffer.BlockCopy(BitConverter.GetBytes(n),0,b,p,2);}
+  static byte[] HashsumElf(){
+   byte[] b=new byte[384];b[0]=0x7f;b[1]=69;b[2]=76;b[3]=70;b[4]=2;b[5]=1;Put(b,40,192);Word(b,58,64);Word(b,60,3);Word(b,62,2);
+   byte[] names=Encoding.ASCII.GetBytes("\0.rodata\0.shstrtab\0");Buffer.BlockCopy(names,0,b,64,names.Length);
+   byte[] messages=Encoding.ASCII.GetBytes("%s: OK\n\0%s: HASH MISMATCH\n\0%s: READ ERROR\n\0");Buffer.BlockCopy(messages,0,b,96,messages.Length);
+   Put(b,256,1);Put(b,260,1);Put(b,264,2);Put(b,280,96);Put(b,288,80);
+   Put(b,320,9);Put(b,324,3);Put(b,344,64);Put(b,352,(uint)names.Length);return b;
+  }
   sealed class AdversarialStream:MemoryStream {
    readonly long advertised; readonly bool changeLength; public int Reads;
    public AdversarialStream(byte[] contents,long length,bool mutate):base(contents){advertised=length;changeLength=mutate;}
@@ -24,6 +31,11 @@ namespace DualBoot.Installer {
   }
   static SteamFileRecord FileRecord(string root,string name,string original,byte[] b){File.WriteAllBytes(Path.Combine(root,"files",name),b);return new SteamFileRecord{Path="files/"+name,OriginalPath=original,Bytes=b.Length,Hash=SteamCollection.Sha256(b)};}
   public static int Main(string[] args){string root=Path.Combine(Path.GetTempPath(),"dualboot-collection-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(Path.Combine(root,"files"));try{
+   byte[] original=HashsumElf(),quiet=SteamBundle.QuietHashsum(original);Check(quiet[96]==0 && original[96]==37,"quiet success format only in copied module");int differences=0;for(int x=0;x<original.Length;x++)if(original[x]!=quiet[x])differences++;Check(differences==1,"quiet module preserves code, errors and all other bytes");
+   byte[] executable=HashsumElf();Put(executable,264,6);Reject(delegate{SteamBundle.QuietHashsum(executable);},"quiet refuses executable section");
+   byte[] duplicate=HashsumElf();Buffer.BlockCopy(Encoding.ASCII.GetBytes("%s: OK\n\0"),0,duplicate,150,8);Reject(delegate{SteamBundle.QuietHashsum(duplicate);},"quiet refuses ambiguous success format");
+   byte[] malformed=HashsumElf();Put(malformed,40,999999);Reject(delegate{SteamBundle.QuietHashsum(malformed);},"quiet refuses truncated ELF table");
+   byte[] overlap=new byte[448],baseElf=HashsumElf();Buffer.BlockCopy(baseElf,0,overlap,0,baseElf.Length);Buffer.BlockCopy(baseElf,320,overlap,384,64);Buffer.BlockCopy(baseElf,256,overlap,320,64);Word(overlap,60,4);Word(overlap,62,3);Put(overlap,264,6);Reject(delegate{SteamBundle.QuietHashsum(overlap);},"quiet refuses overlapping executable section");
    AdversarialStream huge=new AdversarialStream(new byte[]{1},(long)Int32.MaxValue+1,false);Reject(delegate{SteamCollection.ReadBounded(huge,-1,65536);},"handle oversized before allocation");Check(huge.Reads==0,"oversize never read");
    Reject(delegate{SteamCollection.ReadBounded(new AdversarialStream(new byte[]{1,2,3},3,false),2,65536);},"opened handle differs from manifest");
    Reject(delegate{SteamCollection.ReadBounded(new AdversarialStream(new byte[]{1,2,3},2,false),2,65536);},"growth beyond snapshot EOF");

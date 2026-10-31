@@ -1,6 +1,17 @@
 # Validação da edição pública
 
-## Instalador 0.3.0 — candidato local de 30/10/2026
+## Edição 0.4.0 — 31/10/2026
+
+- Quatro suítes C aprovadas: configuração, USB/transferência EFI, geometria/alfa/animação/cache e fallback. O teste de foco cobre crescimento inicial rápido e conclusão em 180 ms.
+- Os 12 cenários QEMU/OVMF tradicionais passaram com o novo renderizador e tema público transparente.
+- Instalador: 28 verificações core, 30 de deployment tradicional, 28 de workflow assinado e 40 de coleta/bundle, além do harness de recuperação WinForms.
+- Auxiliares: 13 testes do seletor de saída e sete do coletor Secure Boot, sem serviços ou firmware físicos.
+- CNG real: duas identidades descartáveis foram criadas, reabertas, usadas para assinatura e removidas com suas chaves/certificados conferidos. Adulteração e certificado diferente foram recusados. Uma falha do carregamento automático do provedor Cert em Windows PowerShell foi reproduzida e corrigida por importação explícita do módulo de segurança integrado ao Windows.
+- OVMF com shim/MOK aceitou os templates novos assinados e recusou entradas sem assinatura, adulteradas ou assinadas por outra identidade; relatório V2 conferido com Secure Boot virtual ativo. Sem rede ou discos físicos.
+- O silenciamento ELF é testado para alteração de exatamente um byte da string de sucesso; seções executáveis, sobreposições, formato duplicado e tabela truncada são recusados.
+- O EXE e os auxiliares continuam experimentais. Esta publicação não aplica modificações ao boot do desenvolvedor nem comprova o fluxo físico universal do instalador ou do seletor de tela.
+
+## Instalador 0.3.0 — base publicada em 30/10/2026
 
 - EXE x64 .NET Framework 4.8 compilado com recursos verificados: 28 verificações core, 30 deployment tradicionais, 28 workflow/deployment assinado e 34 coleta/bundle no build empacotado.
 - Chaves descartáveis CNG: criação não exportável, reabertura exata, assinatura de templates, rejeição de adulteração e certificado diferente. As duas identidades LAB e suas chaves foram removidas; somente CER/EFI públicos ficaram em `build/secureboot-lab`.
@@ -13,7 +24,7 @@
 - O novo EXE não foi instalado no SSD físico deste PC. Coleta ao vivo, novo bundle SteamOS, cadastro MOK e instalação/restauração físicos em outro computador continuam pendentes. A instalação particular existente foi preservada.
 - O fluxo tradicional permanece compatível com journals 0.2.0. O cenário antigo Report pode usar 7-Zip ou Python/pyfatfs para releitura independente do FAT; não altera o runtime do instalador.
 
-Manual: `SECUREBOOT.md`. As instruções de reprodução e os artefatos da edição 0.3.0 ainda não constituem uma release publicada.
+Manual: `SECUREBOOT.md`. A edição 0.3.0 foi publicada em 30/10/2026; os limites físicos descritos continuam aplicáveis.
 
 ## Instalador 0.2.0
 

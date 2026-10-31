@@ -90,10 +90,16 @@ try {
     if ($Scenario -eq 'Profiles') {
         if ($log.Contains('DB:ASSET_INVALID') -or $log.Contains('DB:DIAGNOSTIC')) { throw 'Tema nao iniciou no menu grafico.' }
         $null = Send-Qmp @{execute='human-monitor-command';arguments=@{'command-line'='sendkey right'}}
-        Start-Sleep -Milliseconds 400
+        Start-Sleep -Milliseconds 40
+        $movingScreen=Join-Path $runRoot 'expanding-steamos.png'
+        $null = Send-Qmp @{execute='screendump';arguments=@{filename=$movingScreen;format='png'}}
+        Start-Sleep -Milliseconds 1100
         $selectedScreen=Join-Path $runRoot 'selected-steamos.png'
         $null = Send-Qmp @{execute='screendump';arguments=@{filename=$selectedScreen;format='png'}}
         if ((Get-FileHash -LiteralPath $screen).Hash -eq (Get-FileHash -LiteralPath $selectedScreen).Hash) { throw 'Foco nao mudou visualmente.' }
+        $focusLog=Read-DebugLog
+        if(-not $focusLog.Contains('DB:FOCUS_EXPAND') -or $focusLog.Contains('DB:CHILD_START')){throw 'Troca de foco nao animou ou iniciou sistema sem confirmar.'}
+        if((Get-FileHash -LiteralPath $movingScreen).Hash -eq (Get-FileHash -LiteralPath $selectedScreen).Hash){throw 'Quadros da animacao de foco nao mudaram.'}
         $null = Send-Qmp @{execute='human-monitor-command';arguments=@{'command-line'='sendkey d'}}
         Start-Sleep -Milliseconds 250
         $null = Send-Qmp @{execute='human-monitor-command';arguments=@{'command-line'='sendkey m'}}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -18,12 +18,12 @@ namespace DualBoot.Installer {
         static readonly Color bg=Color.FromArgb(17,21,29),card=Color.FromArgb(27,33,44),fg=Color.FromArgb(234,239,247),muted=Color.FromArgb(173,186,206);
         public SecureBootForm(bool demonstration,ComputerState computer,InstallRequest selection){
             demo=demonstration;state=computer;request=selection;native=demo?null:new SecureBootNative();
-            Text="DualBoot 0.3.0 · Preparar Secure Boot";ClientSize=new Size(1000,900);MinimumSize=new Size(960,850);StartPosition=FormStartPosition.CenterParent;
+            Text="DualBoot 0.4.0 · Preparar Secure Boot";ClientSize=new Size(1000,900);MinimumSize=new Size(960,850);StartPosition=FormStartPosition.CenterParent;
             BackColor=bg;ForeColor=fg;Font=new Font("Segoe UI",10);AutoScaleMode=AutoScaleMode.Dpi;
             var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=1,RowCount=9};
             foreach(int height in new[]{66,64,44,90,80,110,125})layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,10));Controls.Add(layout);
-            layout.Controls.Add(new Label{Dock=DockStyle.Fill,Text="Preparar Secure Boot\r\n0.3.0 EXPERIMENTAL · "+(demo?"DEMONSTRAÇÃO — dados fictícios":"Windows e SteamOS selecionados na janela principal"),Font=new Font("Segoe UI",13,FontStyle.Bold)});
+            layout.Controls.Add(new Label{Dock=DockStyle.Fill,Text="Preparar Secure Boot\r\n0.4.0 EXPERIMENTAL · "+(demo?"DEMONSTRAÇÃO — dados fictícios":"Windows e SteamOS selecionados na janela principal"),Font=new Font("Segoe UI",13,FontStyle.Bold)});
             status.Dock=DockStyle.Fill;status.BackColor=card;status.Padding=new Padding(12);layout.Controls.Add(status);
             var resumeRow=Row();Style(sessions);sessions.Width=680;resumeRow.Controls.Add(sessions);resume=Button(resumeRow,"Retomar sessão",async delegate{var chosen=sessions.SelectedItem as SecureBootSession;if(chosen==null)return;await Run(delegate{},null,chosen.Id);});layout.Controls.Add(resumeRow);
             var collectPanel=new Panel{Dock=DockStyle.Fill};collectPanel.Controls.Add(new Label{Text="1   Coleta nova do SteamOS (obrigatória quando selecionado)",AutoSize=true,Location=new Point(0,0)});

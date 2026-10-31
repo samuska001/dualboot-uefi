@@ -39,7 +39,10 @@ Set-Content -LiteralPath $runnerPath -Value $runner
 $failure=$null;$removed=0;$thumb=$null;$wrongThumb=$null
 $staged=Join-Path $temp 'public';New-Item -ItemType Directory $staged | Out-Null
 try {
- if(-not (Test-Path (Join-Path $output 'lab-probe-unsigned.efi'))){throw 'Compile the unsigned LAB probe before running lifecycle'}
+ # Build the public probe every time; a fresh checkout has no LAB fixtures.
+ $zig=Join-Path $root 'tools\zig-x86_64-windows-0.15.2\zig.exe'
+ & $zig build-exe -target x86_64-uefi -O ReleaseSmall -fno-compiler-rt -fno-stack-check -fno-stack-protector -cflags -std=c11 -O2 -Wall -Wextra -Werror -ffreestanding -fshort-wchar -mno-red-zone -mno-stack-arg-probe -fno-stack-protector -fno-builtin -DDB_TEST_IO=1 -- (Join-Path $root 'tests\efi_secureboot_installer.c') (Join-Path $root 'src\core.c') ('-femit-bin='+(Join-Path $output 'lab-probe-unsigned.efi'))
+ if($LASTEXITCODE -ne 0){throw 'LAB probe compilation failed'}
  & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /r:System.Security.dll "/out:$exe" (Join-Path $root 'installer\SecureSigning.cs') $runnerPath
  if($LASTEXITCODE -ne 0){throw 'LAB compilation failed'}
  & $exe $temp $root $staged
